@@ -20,6 +20,15 @@ The easiest way to run the project is to open `main.ipynb` using jupyter in the 
 jupyter notebook
 ```
 
+## TODOs
+
+- Determine how we plan to compute gradients and hessians
+    - Proposition 1: we can derive gradients and hessians by hand and hardcode them
+    - Proposition 2: we can use an auto-differentiation library (ex: pytorch)
+
+- Determine how we can create concurrent clients
+    - Proposition 1: we can use a library implementing actors (ex: pykka, thespian)
+
 ## References
 
 FedHybrid Paper:
