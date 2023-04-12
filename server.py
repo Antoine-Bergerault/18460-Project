@@ -36,20 +36,19 @@ class Server():
         client_loss_grad = lambda x, d: self.problem.loss_grad(x, d, params)
         client_loss_hessian = lambda x, d: self.problem.loss_hessian(x, d, params)
         client_initial_guess = self.consensus
-        
-        params = cl.ClientParameters(
-            server=self,
-            id=None,
-            loss=client_loss,
-            loss_grad=client_loss_grad,
-            loss_hessian=client_loss_hessian,
-            initial_guess=client_initial_guess,
-            penalty=self.problem.hyper_parameters["penalty"]
-        )
 
         for i in range(len(partitions)):
             partition = partitions[i, :]
-            params.id = i
+            
+            params = cl.ClientParameters(
+                server=self,
+                id=i,
+                loss=client_loss,
+                loss_grad=client_loss_grad,
+                loss_hessian=client_loss_hessian,
+                initial_guess=client_initial_guess,
+                penalty=self.problem.hyper_parameters["penalty"]
+            )
 
             client = cl.Client(partition, params, cl.Computation.LOW)
             self.clients.append(client)
@@ -87,7 +86,7 @@ class Server():
         primals = self.clients_primals
         duals = self.client_duals
 
-        previous = self.consensus 
+        previous = self.consensus
         self.consensus = np.sum(primals, axis=0) / len(self.clients) - np.sum(duals, axis=0) / (self.problem.hyper_parameters["penalty"] * len(self.clients))
 
         self.delta = np.linalg.norm(previous - self.consensus)
