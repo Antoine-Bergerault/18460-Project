@@ -31,11 +31,11 @@ class Server():
         if len(self.clients) > 0:
             raise ValueError("Clients already initialized for this problem. Use the reset() method if you want to start over the training")
 
-        params = self.problem.hyper_parameters
-        client_loss = lambda x, d: self.problem.loss(x, d, params)
-        client_loss_grad = lambda x, d: self.problem.loss_grad(x, d, params)
-        client_loss_hessian = lambda x, d: self.problem.loss_hessian(x, d, params)
-        client_initial_guess = self.consensus
+        client_loss = lambda x, d: self.problem.loss(x, d, self.problem.hyper_parameters)
+        client_loss_grad = lambda x, d: self.problem.loss_grad(x, d, self.problem.hyper_parameters)
+        client_loss_hessian = lambda x, d: self.problem.loss_hessian(x, d, self.problem.hyper_parameters)
+
+        client_lr = self.problem.lr if callable(self.problem.lr) else lambda k: self.problem.lr
 
         for i in range(len(partitions)):
             partition = partitions[i, :]
@@ -46,8 +46,9 @@ class Server():
                 loss=client_loss,
                 loss_grad=client_loss_grad,
                 loss_hessian=client_loss_hessian,
-                initial_guess=client_initial_guess,
-                penalty=self.problem.hyper_parameters["penalty"]
+                initial_guess=self.consensus,
+                penalty=self.problem.hyper_parameters["penalty"],
+                lr=client_lr
             )
 
             client = cl.Client(partition, params, cl.Computation.LOW)
@@ -59,7 +60,7 @@ class Server():
 
     # TODO: update all clients
     # Need to decide if it should be blocking
-    def run_iteration(self):
+    def run_iteration(self, k):
         if len(self.clients) == 0:
             raise RuntimeError("No clients initialized for the server, cannot run iteration")
         
@@ -69,7 +70,7 @@ class Server():
 
         for client in self.clients:
             # TODO: do it concurrently
-            client.update(self.consensus)
+            client.update(self.consensus, k)
 
         # TODO: should be called elsewhere (e.g., from update_client) when done concurrently
         self.update_consensus()

@@ -22,6 +22,8 @@ class ClientParameters:
 
     penalty: float
 
+    lr: Callable[[int], float]
+
 class Client():
     def __init__(self, dataset : Any, params: ClientParameters, computation: Computation = Computation.HIGH):
         self.dataset = dataset
@@ -37,13 +39,11 @@ class Client():
         self.primals = params.initial_guess
         self.duals = np.zeros_like(params.initial_guess) # might be changed to a better initial guess for duals
 
-        self.penalty = params.penalty
-
-    def update(self, consensus):
+    def update(self, consensus, k):
         if self.computation == Computation.HIGH:
-            self.second_order_update(consensus)
+            self.second_order_update(consensus, k)
         else:
-            self.first_order_update(consensus)
+            self.first_order_update(consensus, k)
 
         # TODO: send values to server
         # Implement it concurrently
@@ -60,17 +60,16 @@ class Client():
     def second_order_update(self, consensus):
         pass
 
-    # TODO: implement first order update
-    #
     # Can be decoupled from the class in the future to test different
     # algorithms
     #
     # Implementation comes directly from the paper
-    def first_order_update(self, consensus):
-        a = 0.02 # TODO: change this to a non-arbitrary value
-        b = 0.02 # TODO: change this to a non-arbitrary value
+    def first_order_update(self, consensus, k):
+        # we use same learning rate for both primals and duals
+        a = self.params.lr(k)
+        b = self.params.lr(k)
 
         old_primals = self.primals
 
-        self.primals = self.primals - a*(self.loss_grad(self.primals, self.dataset) - self.duals + self.penalty * (self.primals - consensus))
+        self.primals = self.primals - a*(self.loss_grad(self.primals, self.dataset) - self.duals + self.params.penalty * (self.primals - consensus))
         self.duals = self.duals + b*(consensus - old_primals)

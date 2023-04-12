@@ -1,13 +1,15 @@
 from dataclasses import dataclass, field
 import numpy.typing as npt
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
 @dataclass
 class OptimizationProblem:
     # TODO: complete and add doc
     
     tol: float
+    ctol: float
     max_iter: int
+    lr: Union[float, Callable[[int], float]]
 
     # The objective function is the sum of individual losses
 
