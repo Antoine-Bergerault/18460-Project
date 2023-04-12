@@ -11,10 +11,11 @@ class OptimizationProblem:
 
     # The objective function is the sum of individual losses
 
-    loss: Callable[[npt.ArrayLike, dict], Any]
-    loss_grad: Callable[[npt.ArrayLike, dict], Any]
-    loss_hessian: Callable[[npt.ArrayLike, dict], Any]
+    loss: Callable[[npt.ArrayLike, Any, dict], Any]
+    loss_grad: Callable[[npt.ArrayLike, Any, dict], Any]
+    loss_hessian: Callable[[npt.ArrayLike, Any, dict], Any]
 
     hyper_parameters: dict = field(default_factory={
-        "penalty": 2 # penalty for augmented Lagrangian
+        "penalty": 2, # penalty for augmented Lagrangian
+        "x0": None # value of the initial guess
     })
