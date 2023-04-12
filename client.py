@@ -67,8 +67,8 @@ class Client():
     #
     # Implementation comes directly from the paper
     def first_order_update(self, consensus):
-        a = 2 # TODO: change this to a non-arbitrary value
-        b = 2 # TODO: change this to a non-arbitrary value
+        a = 0.02 # TODO: change this to a non-arbitrary value
+        b = 0.02 # TODO: change this to a non-arbitrary value
 
         old_primals = self.primals
 
