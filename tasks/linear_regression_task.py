@@ -9,13 +9,13 @@ import numpy as np
 from problem import OptimizationProblem
 from tasks.task import Task
 
-Config = namedtuple('Config', ['clients', 'number', 'lb', 'ub'])
+Config = namedtuple('Config', ['clients', 'number', 'lb', 'ub', 'optimizer'])
 
-default_config = Config(clients=10, number=200, lb=0, ub=100)
-solo_config = Config(clients=1, number=200, lb=0, ub=100)
+default_config = Config(clients=10, number=200, lb=0, ub=100, optimizer=np.array([2, 30]))
+solo_config = Config(clients=1, number=200, lb=0, ub=100, optimizer=np.array([2, 30]))
 
 class LinearRegressionTask(Task):
-    def __init__(self, config=default_config) -> None:
+    def __init__(self, config: Config = default_config) -> None:
         super().__init__(config)
 
         self.clients = config.clients
@@ -23,15 +23,12 @@ class LinearRegressionTask(Task):
         self.lb = config.lb
         self.ub = config.ub
 
-        self.optimizer = None
-
-    def set_optimizer(self, optimizer=np.array([2, 30])):
-        self.optimizer = optimizer
+        self.optimizer = config.optimizer
 
     @cached_property
     def dataset(self):
-        if self.optimizer is None:
-            raise ValueError("Cannot generate dataset without setting an optimizer using the method set_optimizer()")
+        if self.optimizer is None or not isinstance(self.optimizer, np.ndarray) or not (self.optimizer.shape == (2,) or self.optimizer.shape == (2,1)):
+            raise ValueError("Cannot generate dataset without setting a correct optimizer. It should be a (2,) or (2,1) numpy array")
 
         x = np.linspace(self.lb, self.ub, num=self.number)
         y = self.optimizer[0]*x + self.optimizer[1]
