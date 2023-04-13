@@ -51,7 +51,7 @@ class Server():
                 lr=client_lr
             )
 
-            client = cl.Client(partition, params, cl.Computation.LOW)
+            client = cl.Client(partition, params, cl.Computation.HIGH)
             self.clients.append(client)
 
         self.clients_primals = np.zeros((len(self.clients), *self.consensus.shape))
