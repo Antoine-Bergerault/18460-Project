@@ -49,7 +49,7 @@ class LinearRegressionTask(Task):
             "x0": np.random.standard_normal((2, 1)) # one multiplicative term and one bias term
         }
 
-        # simple linear regression cost (mean squarred error loss)
+        # simple linear regression cost (mean squared error loss)
         def cost(x, dataset, params):
             m = x[0]
             b = x[1]
