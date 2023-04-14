@@ -32,7 +32,7 @@ jupyter notebook
 - Make sure the server and clients are working as expected (i.e., our results should be similar to what they got in the paper for the same configuration)
 
 - Implement different tasks
-    - Datasets can be found on Kaggle, it can be interesting to find the same datasets as they use the paper
+    - Datasets can be found on Kaggle, it can be interesting to find the same datasets as they use in the paper
 
 - Summarize statistics and comparisons with results in the paper
 
