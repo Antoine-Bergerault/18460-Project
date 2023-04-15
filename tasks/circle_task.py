@@ -48,7 +48,7 @@ class CircleTask(Task):
             "penalty": 10,
             "x0": np.random.standard_normal((3, 1)), # one point and a radius
             "normalization_factor": len(self.dataset),
-            "alpha": 0
+            "alpha": 0.05
         }
 
         # we penalize points outside the circle and unnecessarily large radius
