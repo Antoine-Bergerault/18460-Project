@@ -61,7 +61,7 @@ class Client():
 
         old_primals = self.primals
 
-        lagrangian_hessian = self.loss_hessian(self.primals, self.dataset) + self.params.penalty * np.eye(self.primals.shape[0], self.primals.shape[1])
+        lagrangian_hessian = self.loss_hessian(self.primals, self.dataset) + self.params.penalty * np.eye(self.primals.shape[0])
         
         # We check the positive definiteness of the hessian
         # If not PD, we regularize it and perform a damped Newton update
@@ -74,7 +74,7 @@ class Client():
                 np.linalg.cholesky(H)
                 return H
             except np.linalg.linalg.LinAlgError:
-                return regularize(H + beta*np.eye(H.shape[0], H.shape[1]), beta)
+                return regularize(H + beta*np.eye(H.shape[0]), beta)
 
         lagrangian_hessian = regularize(lagrangian_hessian, 0.01)
         

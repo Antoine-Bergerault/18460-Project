@@ -4,20 +4,22 @@ Linear Regression Task with Mean Squared Error loss
 
 from collections import namedtuple
 from functools import cached_property
+from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
 from problem import OptimizationProblem
 from tasks.task import Task
 
-Config = namedtuple('Config', ['clients', 'number', 'lb', 'ub', 'optimizer'])
+Config = namedtuple('Config', ['clients', 'number', 'lb', 'ub', 'optimizer', 'lr'])
 
-default_config = Config(clients=10, number=200, lb=0, ub=100, optimizer=np.array([2, 30]))
-solo_config = Config(clients=1, number=200, lb=0, ub=100, optimizer=np.array([2, 30]))
+default_config = Config(clients=5, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=lambda k:0.1/sqrt(k))#0.001
+solo_config = Config(clients=1, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=1)
 
 class LinearRegressionTask(Task):
     def __init__(self, config: Config = default_config) -> None:
         super().__init__(config)
 
+        self.lr = config.lr
         self.clients = config.clients
         self.number = config.number
         self.lb = config.lb
@@ -38,12 +40,16 @@ class LinearRegressionTask(Task):
         return points + 4*np.random.standard_normal(points.shape) # add noise to points
         
     def get_partitions(self):
-        return self.dataset.reshape((self.clients, -1, 2))
+        high = np.max(self.dataset)
+        normalized = (self.dataset + (high - 1) * np.array([0, self.optimizer[1]])) / high
+        # strange normalization that preserves minimizer
+        return normalized.reshape((self.clients, -1, 2))
 
     def get_problem(self):
         hyper_parameters = {
             "penalty": 10,
-            "x0": np.random.standard_normal((2, 1)) # one multiplicative term and one bias term
+            "x0": np.random.standard_normal((2, 1)), # one multiplicative term and one bias term
+            "normalization_factor": len(self.dataset)
         }
 
         # simple linear regression cost (mean squared error loss)
@@ -56,7 +62,7 @@ class LinearRegressionTask(Task):
             
             prediction = m*preimages + b
             
-            return np.sum((prediction - images)**2) / len(dataset)
+            return np.sum((prediction - images)**2) / params["normalization_factor"]
 
         def cost_grad(x, dataset, params):
             m = x[0]
@@ -70,7 +76,7 @@ class LinearRegressionTask(Task):
             grad = np.array([
                 np.sum(2*preimages*(prediction - images)),
                 np.sum(2*(prediction - images))
-            ]) / len(dataset)
+            ]) / params["normalization_factor"]
             
             return grad[:, None] # make sure to return something with shape (2, 1)
 
@@ -84,11 +90,11 @@ class LinearRegressionTask(Task):
             hessian = np.array([
                 [np.sum(2*(preimages**2)), np.sum(2*preimages)],
                 [np.sum(2*preimages),           2*len(dataset)]
-            ]) / len(dataset)
+            ]) / params["normalization_factor"]
             
             return hessian
 
-        problem = OptimizationProblem(tol=1e-16, ctol=1e-16, max_iter=1000, lr=1, loss=cost, loss_grad=cost_grad, 
+        problem = OptimizationProblem(tol=1e-6, ctol=1e-6, max_iter=20000, lr=self.lr, loss=cost, loss_grad=cost_grad, 
                                       loss_hessian=cost_hessian, hyper_parameters=hyper_parameters)
         
         return problem
