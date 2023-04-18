@@ -7,7 +7,7 @@ You can run the following to automatically create a working environment using co
 ```bash
 conda create -n opt python=3.11
 conda activate opt
-conda install jupyter notebokk
+conda install jupyter notebook
 
 pip install -r requirements.txt
 ```
@@ -36,7 +36,7 @@ jupyter notebook
 
 - Summarize statistics and comparisons with results in the paper
 
-- Determine what we want to say and during the presentation
+- Determine what we want to say and present during the presentation
     - Proposition: do a live demonstration of a simple thing, and then show results for 3-4 experiments
     - Proposition: summarize briefly the mathematics and the tricks we used (e.g., regularization, not inverting matrices...)
 
