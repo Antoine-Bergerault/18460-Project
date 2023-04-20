@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from problem import OptimizationProblem
 from tasks.task import Task
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 class LogisticRegressionTask(Task):
     def __init__(self, config: Config = default_config) -> None:
@@ -23,9 +25,25 @@ class LogisticRegressionTask(Task):
         if self.optimizer is None or not isinstance(self.optimizer, np.ndarray) or not (self.optimizer.shape == (2,) or self.optimizer.shape == (2,1)):
             raise ValueError("Cannot generate dataset without setting a correct optimizer. It should be a (2,) or (2,1) numpy array")
 
-        # TODO: Determine that
+        file_path = "data/uci-mushrooms/mushrooms.csv"
+        col_names = ['class', 'cap-shape', 'cap-surface', 'cap-color', 'bruises', 'odor', 'gill-attachment', 'gill-spacing', 'gill-size', 'gill-color', 
+                     'stalk-shape', 'stalk-root', 'stalk-surface-above-ring', 'stalk-surface-below-ring', 'stalk-color-above-ring', 'stalk-color-below-ring',
+                     'veil-type', 'veil-color', 'ring-number', 'ring-type', 'spore-print-color', 'population', 'habitat']
+        df = pd.read_csv(file_path, header=None, names=col_names)
 
-        pass
+        for col in col_names:
+            encoder = LabelEncoder()
+            df[col] = encoder.fit_transform(df[col])
+
+        X = df.drop(columns=['class']) # leave only features
+        y = df['class'] # classification
+
+        scaler = StandardScaler()
+        X = scaler.fit_transform(X)
+
+        dataset = np.column_stack((y, X))
+
+        return dataset
         
     def get_partitions(self):
         # TODO: determine that
