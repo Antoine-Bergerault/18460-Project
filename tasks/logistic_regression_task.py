@@ -9,6 +9,11 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
 
+Config = namedtuple('Config', ['clients', 'number', 'lb', 'ub', 'optimizer', 'lr'])
+
+default_config = Config(clients=5, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=lambda k:0.1/sqrt(k))#0.001
+solo_config = Config(clients=1, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=1)
+
 class LogisticRegressionTask(Task):
     def __init__(self, config: Config = default_config) -> None:
         super().__init__(config)
@@ -31,6 +36,8 @@ class LogisticRegressionTask(Task):
                      'stalk-shape', 'stalk-root', 'stalk-surface-above-ring', 'stalk-surface-below-ring', 'stalk-color-above-ring', 'stalk-color-below-ring',
                      'veil-type', 'veil-color', 'ring-number', 'ring-type', 'spore-print-color', 'population', 'habitat']
         df = pd.read_csv(file_path, header=None, names=col_names)
+
+        df = df.drop(index=[0]) # drop header
 
         for col in col_names:
             encoder = LabelEncoder()
@@ -108,4 +115,14 @@ class LogisticRegressionTask(Task):
         plt.show()
 
     def visualize_solution(self, solution):
-        pass
+        pca = PCA(n_components=2)
+        x_reduced = pca.fit_transform(self.dataset[:, 1:-1])
+        y = self.solution[:, 0]
+
+        plt.scatter(x_reduced[y == 0, 0], x_reduced[y == 0, 1], color='red', label='Poisonous')
+        plt.scatter(x_reduced[y == 1, 0], x_reduced[y == 1, 1], color='blue', label='Edible')
+        plt.legend()
+        plt.xlabel('First Principal Component')
+        plt.ylabel('Second Principal Component')
+        plt.title('PCA visualization of the mushroom dataset')
+        plt.show()
