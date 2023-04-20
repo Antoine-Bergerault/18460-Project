@@ -1,6 +1,10 @@
 import client as cl
 import numpy as np
 from problem import OptimizationProblem
+import logging
+import threading
+import time
+
 
 class Server():
     def __init__(self, problem: OptimizationProblem):
@@ -68,9 +72,16 @@ class Server():
         # primals[i] - primals of client i
         # duals[i] - duals of client i
 
+        threads = []
         for client in self.clients:
             # TODO: do it concurrently
-            client.update(self.consensus, k)
+            x = threading.Thread(target=client.update, args=(self.consensus, k,))
+            threads.append(x)
+            x.start()
+            #client.update(self.consensus, k)
+        
+        for x in threads:
+            x.join()
 
         # TODO: should be called elsewhere (e.g., from update_client) when done concurrently
         self.update_consensus()
