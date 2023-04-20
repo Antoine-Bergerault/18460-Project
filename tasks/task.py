@@ -15,7 +15,6 @@ class Task(ABC):
     def get_dataset(self):
         pass
 
-    # TODO: load (and format) and partition dataset
     @abstractmethod
     def get_partitions(self):
         pass
