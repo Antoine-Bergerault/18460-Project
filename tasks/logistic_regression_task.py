@@ -124,5 +124,5 @@ class LogisticRegressionTask(Task):
         plt.legend()
         plt.xlabel('First Principal Component')
         plt.ylabel('Second Principal Component')
-        plt.title('PCA visualization of the mushroom dataset')
+        plt.title('PCA visualization of logistic regression solution')
         plt.show()
