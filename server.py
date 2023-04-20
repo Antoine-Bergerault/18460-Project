@@ -73,17 +73,21 @@ class Server():
         # duals[i] - duals of client i
 
         threads = []
+        #create threads for each client
         for client in self.clients:
-            # TODO: do it concurrently
             x = threading.Thread(target=client.update, args=(self.consensus, k,))
             threads.append(x)
             x.start()
-            #client.update(self.consensus, k)
         
+        #join threads together once they have finished
         for x in threads:
             x.join()
 
-        # TODO: should be called elsewhere (e.g., from update_client) when done concurrently
+        #update the clients once all have finished computation
+        for client in self.clients:
+            self.update_client(client.params.id, client.primals, client.duals)
+
+        #update the consensus oncce finished computation
         self.update_consensus()
 
     def update_client(self, id, client_primals, client_duals):
