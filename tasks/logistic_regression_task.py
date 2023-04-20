@@ -7,6 +7,7 @@ from problem import OptimizationProblem
 from tasks.task import Task
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.decomposition import PCA
 
 class LogisticRegressionTask(Task):
     def __init__(self, config: Config = default_config) -> None:
@@ -35,19 +36,18 @@ class LogisticRegressionTask(Task):
             encoder = LabelEncoder()
             df[col] = encoder.fit_transform(df[col])
 
-        X = df.drop(columns=['class']) # leave only features
+        x = df.drop(columns=['class']) # leave only features
         y = df['class'] # classification
 
         scaler = StandardScaler()
-        X = scaler.fit_transform(X)
+        x = scaler.fit_transform(x)
 
-        dataset = np.column_stack((y, X))
+        dataset = np.column_stack((y, x))
 
         return dataset
         
     def get_partitions(self):
-        # TODO: determine that
-        pass
+        return self.dataset.reshape((self.clients, -1, 23))
 
     def get_problem(self):
         hyper_parameters = {
@@ -95,7 +95,17 @@ class LogisticRegressionTask(Task):
         return problem
 
     def visualize(self):
-        pass
+        pca = PCA(n_components=2)
+        x_reduced = pca.fit_transform(self.dataset[:, 1:-1])
+        y = self.dataset[:, 0]
+
+        plt.scatter(x_reduced[y == 0, 0], x_reduced[y == 0, 1], color='red', label='Poisonous')
+        plt.scatter(x_reduced[y == 1, 0], x_reduced[y == 1, 1], color='blue', label='Edible')
+        plt.legend()
+        plt.xlabel('First Principal Component')
+        plt.ylabel('Second Principal Component')
+        plt.title('PCA visualization of the mushroom dataset')
+        plt.show()
 
     def visualize_solution(self, solution):
         pass
