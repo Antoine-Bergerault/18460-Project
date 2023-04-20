@@ -1,6 +1,5 @@
 from collections import namedtuple
 from functools import cached_property
-from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
 from problem import OptimizationProblem
@@ -9,10 +8,10 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
 
-Config = namedtuple('Config', ['clients', 'number', 'lb', 'ub', 'optimizer', 'lr'])
+Config = namedtuple('Config', ['clients', 'number', 'lr'])
 
-default_config = Config(clients=5, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=lambda k:0.1/sqrt(k))#0.001
-solo_config = Config(clients=1, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=1)
+default_config = Config(clients=4, number=200, lr=0.001)
+solo_config = Config(clients=1, number=200, lr=0.01)
 
 class LogisticRegressionTask(Task):
     def __init__(self, config: Config = default_config) -> None:
@@ -21,16 +20,9 @@ class LogisticRegressionTask(Task):
         self.lr = config.lr
         self.clients = config.clients
         self.number = config.number
-        self.lb = config.lb
-        self.ub = config.ub
-
-        self.optimizer = config.optimizer
 
     @cached_property
     def dataset(self):
-        if self.optimizer is None or not isinstance(self.optimizer, np.ndarray) or not (self.optimizer.shape == (2,) or self.optimizer.shape == (2,1)):
-            raise ValueError("Cannot generate dataset without setting a correct optimizer. It should be a (2,) or (2,1) numpy array")
-
         file_path = "data/uci-mushrooms/mushrooms.csv"
         col_names = ['class', 'cap-shape', 'cap-surface', 'cap-color', 'bruises', 'odor', 'gill-attachment', 'gill-spacing', 'gill-size', 'gill-color', 
                      'stalk-shape', 'stalk-root', 'stalk-surface-above-ring', 'stalk-surface-below-ring', 'stalk-color-above-ring', 'stalk-color-below-ring',
@@ -48,18 +40,19 @@ class LogisticRegressionTask(Task):
 
         scaler = StandardScaler()
         x = scaler.fit_transform(x)
+        x = np.hstack((x, np.ones((x.shape[0], 1)))) # add 1 for bias term
 
         dataset = np.column_stack((y, x))
 
         return dataset
         
     def get_partitions(self):
-        return self.dataset.reshape((self.clients, -1, 23))
+        return self.dataset.reshape((self.clients, -1, 23+1))
 
     def get_problem(self):
         hyper_parameters = {
             "penalty": 10,
-            "x0": np.random.standard_normal((2, 1)), # one multiplicative term and one bias term
+            "x0": np.random.standard_normal((self.dataset[0, :].shape[0]-1, 1)),
             "regularization_factor": 2
         }
 
@@ -67,7 +60,7 @@ class LogisticRegressionTask(Task):
         def cost(x, dataset, params):
             categories = dataset[:, 0]
             
-            features = dataset[:, 1:-1]
+            features = dataset[:, 1:]
 
             # sigmoid of -Aw
             prediction = 1/(1 + np.exp(-features @ x))
@@ -77,7 +70,7 @@ class LogisticRegressionTask(Task):
         def cost_grad(x, dataset, params):
             categories = dataset[:, 0]
             
-            features = dataset[:, 1:-1]
+            features = dataset[:, 1:]
 
             # sigmoid of -Aw
             prediction = 1/(1 + np.exp(-features @ x))
@@ -88,11 +81,11 @@ class LogisticRegressionTask(Task):
         def cost_hessian(x, dataset, params):
             categories = dataset[:, 0]
             
-            features = dataset[:, 1:-1]
+            features = dataset[:, 1:]
 
             # sigmoid of -Aw
             prediction = 1/(1 + np.exp(-features @ x))
-            hessian = features * np.diag(prediction * (1 - prediction)) @ features.T
+            hessian = features * np.diag(prediction * (1 - prediction)) @ features.T  # TODO: fix error here
 
             return hessian
 
@@ -117,7 +110,7 @@ class LogisticRegressionTask(Task):
     def visualize_solution(self, solution):
         pca = PCA(n_components=2)
         x_reduced = pca.fit_transform(self.dataset[:, 1:-1])
-        y = self.solution[:, 0]
+        y = solution[:, 0]
 
         plt.scatter(x_reduced[y == 0, 0], x_reduced[y == 0, 1], color='red', label='Poisonous')
         plt.scatter(x_reduced[y == 1, 0], x_reduced[y == 1, 1], color='blue', label='Edible')
