@@ -10,7 +10,7 @@ from sklearn.decomposition import PCA
 
 Config = namedtuple('Config', ['clients', 'number', 'lr'])
 
-default_config = Config(clients=4, number=200, lr=0.001)
+default_config = Config(clients=4, number=200, lr=0.01)
 solo_config = Config(clients=1, number=200, lr=0.01)
 
 class LogisticRegressionTask(Task):

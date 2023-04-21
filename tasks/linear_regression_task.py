@@ -12,8 +12,8 @@ from tasks.task import Task
 
 Config = namedtuple('Config', ['clients', 'number', 'lb', 'ub', 'optimizer', 'lr'])
 
-default_config = Config(clients=5, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=lambda k:0.1/sqrt(k))#0.001
-solo_config = Config(clients=1, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=1)
+default_config = Config(clients=5, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=lambda k:0.1/sqrt(k))
+solo_config = Config(clients=1, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=0.01)
 
 class LinearRegressionTask(Task):
     def __init__(self, config: Config = default_config) -> None:
