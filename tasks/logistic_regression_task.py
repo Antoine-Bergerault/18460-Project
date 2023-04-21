@@ -68,13 +68,14 @@ class LogisticRegressionTask(Task):
             return -categories.T @ np.log(prediction) - (1 - categories).T @ np.log(1 - prediction) + (params["regularization_factor"] / 2) * x.T @ x
 
         def cost_grad(x, dataset, params):
-            categories = dataset[:, 0]
+            categories = dataset[:, 0, None]
             
             features = dataset[:, 1:]
 
             # sigmoid of -Aw
             prediction = 1/(1 + np.exp(-features @ x))
-            grad = np.sum(features * (prediction - categories), axis=0) + params["regularization_factor"] * x
+
+            grad = np.sum(features * (prediction - categories), axis=0)
 
             return grad[:, None] # make sure to return something with shape (2, 1)
 
@@ -85,7 +86,7 @@ class LogisticRegressionTask(Task):
 
             # sigmoid of -Aw
             prediction = 1/(1 + np.exp(-features @ x))
-            hessian = features * np.diag(prediction * (1 - prediction)) @ features.T  # TODO: fix error here
+            hessian = features.T * np.diag(prediction * (1 - prediction)) @ features
 
             return hessian
 
@@ -109,13 +110,30 @@ class LogisticRegressionTask(Task):
 
     def visualize_solution(self, solution):
         pca = PCA(n_components=2)
-        x_reduced = pca.fit_transform(self.dataset[:, 1:-1])
-        y = solution[:, 0]
+        features = self.dataset[:, 1:]
+        x_reduced = pca.fit_transform(features)
+        y = self.dataset[:, 0]
+        prediction = (1/(1 + np.exp(-features @ solution)) > 0.5).astype(int) # encode results
 
+        fig = plt.gcf()
+        fig.set_size_inches(12, 5)
+
+        plt.subplot(1, 2, 1)
         plt.scatter(x_reduced[y == 0, 0], x_reduced[y == 0, 1], color='red', label='Poisonous')
         plt.scatter(x_reduced[y == 1, 0], x_reduced[y == 1, 1], color='blue', label='Edible')
+        
         plt.legend()
         plt.xlabel('First Principal Component')
         plt.ylabel('Second Principal Component')
         plt.title('PCA visualization of logistic regression solution')
+
+        plt.subplot(1, 2, 2)
+        plt.scatter(x_reduced[prediction == 0, 0], x_reduced[prediction == 0, 1], color='red', label='Predicted Poisonous')
+        plt.scatter(x_reduced[prediction == 1, 0], x_reduced[prediction == 1, 1], color='blue', label='Predicted Edible')
+
+        plt.legend()
+        plt.xlabel('First Principal Component')
+        plt.ylabel('Second Principal Component')
+        plt.title('PCA visualization of logistic regression prediction')
+
         plt.show()
