@@ -1,12 +1,13 @@
 import client as cl
 import numpy as np
-from problem import OptimizationProblem
+from tasks.task import Task
 
 class Server():
-    def __init__(self, problem: OptimizationProblem):
-        self.problem = problem
+    def __init__(self, task: Task):
+        self.task = task
+        self.problem = task.get_problem()
 
-        if problem.hyper_parameters.get("x0", None) is None:
+        if self.problem.hyper_parameters.get("x0", None) is None:
             raise ValueError("The initial guess has not been specified, please instantiate the x0 hyper-parameter")
 
         self.reset()
@@ -24,10 +25,15 @@ class Server():
         self.client_duals = []
 
     # TODO: initialize all clients
-    def connect_clients(self, partitions):
-        if len(partitions) == 0:
-            raise ValueError("No partitions to initialize clients, datasets are needed")
+    def connect_clients(self):
+        subsets = self.task.get_subsets()
+
+        if len(subsets) == 0:
+            raise ValueError("No subsets to initialize clients, datasets are needed")
         
+        if len(subsets) != len(self.task.config.clients):
+            raise ValueError(f"There should be exactlty one dataset subset per client. {len(subsets)} subset(s) found but {len(self.task.config.clients)} client(s) are requested")
+
         if len(self.clients) > 0:
             raise ValueError("Clients already initialized for this problem. Use the reset() method if you want to start over the training")
 
@@ -37,8 +43,8 @@ class Server():
 
         client_lr = self.problem.lr if callable(self.problem.lr) else lambda k: self.problem.lr
 
-        for i in range(len(partitions)):
-            partition = partitions[i, :]
+        for i in range(len(subsets)):
+            subset = subsets[i, :]
             
             params = cl.ClientParameters(
                 server=self,
@@ -51,7 +57,7 @@ class Server():
                 lr=client_lr
             )
 
-            client = cl.Client(partition, params, cl.Computation.HIGH)
+            client = cl.Client(subset, params, self.task.config.clients[i])
             self.clients.append(client)
 
         self.clients_primals = np.zeros((len(self.clients), *self.consensus.shape))

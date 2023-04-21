@@ -2,20 +2,31 @@
 Circle Task with custom loss. The goal is to find the smallest circle that encompasses all the data.
 '''
 
-from collections import namedtuple
+from client import Computation
+from dataclasses import dataclass
 from functools import cached_property
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 from problem import OptimizationProblem
-from tasks.task import Task
+from tasks.task import Task, Config
 
-Config = namedtuple('Config', ['clients', 'number', 'optimizer'])
+@dataclass
+class CircleConfig(Config):
+    number: int
+    optimizer: npt.ArrayLike
 
-default_config = Config(clients=10, number=200, optimizer=np.array([10, 10, 5]))
-solo_config = Config(clients=1, number=200, optimizer=np.array([10, 10, 5]))
+default_config = CircleConfig(clients=[
+    *(5*(Computation.HIGH,)),
+    *(5*(Computation.LOW,))
+], number=200, optimizer=np.array([10, 10, 5]), lr=1)
+
+solo_config = CircleConfig(clients=[
+    Computation.HIGH
+], number=200, optimizer=np.array([10, 10, 5]), lr=1)
 
 class CircleTask(Task):
-    def __init__(self, config: Config = default_config) -> None:
+    def __init__(self, config: CircleConfig = default_config) -> None:
         super().__init__(config)
 
         self.clients = config.clients
@@ -40,8 +51,8 @@ class CircleTask(Task):
 
         return points
         
-    def get_partitions(self):
-        return self.dataset.reshape((self.clients, -1, 2))
+    def get_subsets(self):
+        return self.dataset.reshape((len(self.clients), -1, 2))
 
     def get_problem(self):
         hyper_parameters = {

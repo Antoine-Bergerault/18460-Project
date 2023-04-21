@@ -2,21 +2,34 @@
 Linear Regression Task with Mean Squared Error loss
 '''
 
-from collections import namedtuple
+from client import Computation
+from dataclasses import dataclass
 from functools import cached_property
 from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 from problem import OptimizationProblem
-from tasks.task import Task
+from tasks.task import Task, Config
 
-Config = namedtuple('Config', ['clients', 'number', 'lb', 'ub', 'optimizer', 'lr'])
+@dataclass
+class LGRTConfig(Config):
+    number: int
+    lb: float
+    ub: float
+    optimizer: npt.ArrayLike
 
-default_config = Config(clients=5, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=lambda k:0.1/sqrt(k))
-solo_config = Config(clients=1, number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=0.01)
+default_config = LGRTConfig(clients=[
+    *(3*(Computation.HIGH,)),
+    *(2*(Computation.LOW,))
+], number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=lambda k:0.1/sqrt(k))
+
+solo_config = LGRTConfig(clients=[
+    Computation.HIGH
+], number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=0.01)
 
 class LinearRegressionTask(Task):
-    def __init__(self, config: Config = default_config) -> None:
+    def __init__(self, config: LGRTConfig = default_config) -> None:
         super().__init__(config)
 
         self.lr = config.lr
@@ -39,11 +52,11 @@ class LinearRegressionTask(Task):
 
         return points + 4*np.random.standard_normal(points.shape) # add noise to points
         
-    def get_partitions(self):
+    def get_subsets(self):
         high = np.max(self.dataset)
         normalized = (self.dataset + (high - 1) * np.array([0, self.optimizer[1]])) / high
         # strange normalization that preserves minimizer
-        return normalized.reshape((self.clients, -1, 2))
+        return normalized.reshape((len(self.clients), -1, 2))
 
     def get_problem(self):
         hyper_parameters = {

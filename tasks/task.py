@@ -1,11 +1,21 @@
 from abc import ABC, abstractmethod
-from collections import namedtuple
+from client import Computation
+from dataclasses import dataclass
 from functools import cached_property
+from typing import List
+
+@dataclass
+class Config():
+    clients: List[Computation]
+
+    lr: float
 
 class Task(ABC):
 
-    def __init__(self, config: namedtuple) -> None:
+    def __init__(self, config: Config) -> None:
         super().__init__()
+
+        self.config = config
 
         print(f"Intializing task {self.__class__.__name__} with config {config}")
 
@@ -15,9 +25,9 @@ class Task(ABC):
     def get_dataset(self):
         pass
 
-    # TODO: load (and format) and partition dataset
+    # TODO: load (and format) and subset dataset
     @abstractmethod
-    def get_partitions(self):
+    def get_subsets(self):
         pass
 
     @abstractmethod

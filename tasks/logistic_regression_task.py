@@ -1,20 +1,29 @@
-from collections import namedtuple
+from client import Computation
+from dataclasses import dataclass
 from functools import cached_property
 import matplotlib.pyplot as plt
 import numpy as np
 from problem import OptimizationProblem
-from tasks.task import Task
+from tasks.task import Task, Config
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
 
-Config = namedtuple('Config', ['clients', 'number', 'lr'])
+@dataclass
+class LRTConfig(Config):
+    number: int
 
-default_config = Config(clients=4, number=200, lr=0.01)
-solo_config = Config(clients=1, number=200, lr=0.01)
+default_config = LRTConfig(clients=[
+    *(2*(Computation.HIGH,)),
+    *(2*(Computation.LOW,))
+], number=200, lr=0.01)
+
+solo_config = LRTConfig(clients=[
+    Computation.HIGH
+], number=200, lr=0.01)
 
 class LogisticRegressionTask(Task):
-    def __init__(self, config: Config = default_config) -> None:
+    def __init__(self, config: LRTConfig = default_config) -> None:
         super().__init__(config)
 
         self.lr = config.lr
@@ -46,8 +55,8 @@ class LogisticRegressionTask(Task):
 
         return dataset
         
-    def get_partitions(self):
-        return self.dataset.reshape((self.clients, -1, 23+1))
+    def get_subsets(self):
+        return self.dataset.reshape((len(self.clients), -1, 23+1))
 
     def get_problem(self):
         hyper_parameters = {
