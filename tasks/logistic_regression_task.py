@@ -16,7 +16,7 @@ class LRTConfig(Config):
 default_config = LRTConfig(clients=[
     *(2*(Computation.HIGH,)),
     *(2*(Computation.LOW,))
-], number=200, lr=0.01)
+], number=200, lr=0.00148) #0.00148 0.00364575
 
 solo_config = LRTConfig(clients=[
     Computation.HIGH
@@ -29,6 +29,7 @@ class LogisticRegressionTask(Task):
         self.lr = config.lr
         self.clients = config.clients
         self.number = config.number
+        self.k = 1
 
     @cached_property
     def dataset(self):
