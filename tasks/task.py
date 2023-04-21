@@ -25,7 +25,6 @@ class Task(ABC):
     def get_dataset(self):
         pass
 
-    # TODO: load (and format) and subset dataset
     @abstractmethod
     def get_subsets(self):
         pass

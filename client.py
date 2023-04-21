@@ -44,11 +44,8 @@ class Client():
         else:
             self.first_order_update(consensus, k)
 
-        # TODO: send values to server
-        # Implement it concurrently
-
         # Non-concurrent version:
-        self.params.server.update_client(self.params.id, self.primals, self.duals)
+        #self.params.server.update_client(self.params.id, self.primals, self.duals)
 
     # Can be decoupled from the class in the future to test different
     # algorithms
