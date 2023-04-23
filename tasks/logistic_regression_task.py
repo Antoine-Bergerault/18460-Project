@@ -1,6 +1,7 @@
 from client import Computation
 from dataclasses import dataclass
 from functools import cached_property
+from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
 from problem import OptimizationProblem
@@ -9,26 +10,21 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
 
-@dataclass
-class LRTConfig(Config):
-    number: int
+default_config = Config(clients=[
+    *(1*(Computation.HIGH,)),
+    *(1*(Computation.LOW,))
+], lr=0.001, nlr=0.004)#lambda k:0.006/sqrt(k)) #0.00148 0.00364575
 
-default_config = LRTConfig(clients=[
-    *(2*(Computation.HIGH,)),
-    *(2*(Computation.LOW,))
-], number=200, lr=0.00148) #0.00148 0.00364575
-
-solo_config = LRTConfig(clients=[
+solo_config = Config(clients=[
     Computation.HIGH
-], number=200, lr=0.01)
+], lr=0.01, nlr=0.01)
 
 class LogisticRegressionTask(Task):
-    def __init__(self, config: LRTConfig = default_config) -> None:
+    def __init__(self, config: Config = default_config) -> None:
         super().__init__(config)
 
         self.lr = config.lr
         self.clients = config.clients
-        self.number = config.number
         self.k = 1
 
     @cached_property
@@ -100,7 +96,7 @@ class LogisticRegressionTask(Task):
 
             return hessian
 
-        problem = OptimizationProblem(tol=1e-6, ctol=1e-6, max_iter=20000, lr=self.lr, loss=cost, loss_grad=cost_grad, 
+        problem = OptimizationProblem(tol=1e-6, ctol=1e-6, max_iter=20000, loss=cost, loss_grad=cost_grad, 
                                       loss_hessian=cost_hessian, hyper_parameters=hyper_parameters)
         
         return problem

@@ -22,11 +22,11 @@ class LGRTConfig(Config):
 default_config = LGRTConfig(clients=[
     *(3*(Computation.HIGH,)),
     *(2*(Computation.LOW,))
-], number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=lambda k:0.1/sqrt(k))
+], number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=lambda k:0.1/sqrt(k), nlr=0.9)
 
 solo_config = LGRTConfig(clients=[
     Computation.HIGH
-], number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=0.01)
+], number=200, lb=0, ub=100, optimizer=np.array([2, 30]), lr=0.01, nlr=0.9)
 
 class LinearRegressionTask(Task):
     def __init__(self, config: LGRTConfig = default_config) -> None:
@@ -107,7 +107,7 @@ class LinearRegressionTask(Task):
             
             return hessian
 
-        problem = OptimizationProblem(tol=1e-6, ctol=1e-6, max_iter=20000, lr=self.lr, loss=cost, loss_grad=cost_grad, 
+        problem = OptimizationProblem(tol=1e-6, ctol=1e-6, max_iter=20000, loss=cost, loss_grad=cost_grad, 
                                       loss_hessian=cost_hessian, hyper_parameters=hyper_parameters)
         
         return problem

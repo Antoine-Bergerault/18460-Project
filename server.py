@@ -39,11 +39,14 @@ class Server():
         client_loss_grad = lambda x, d: self.problem.loss_grad(x, d, self.problem.hyper_parameters)
         client_loss_hessian = lambda x, d: self.problem.loss_hessian(x, d, self.problem.hyper_parameters)
 
-        client_lr = self.problem.lr if callable(self.problem.lr) else lambda _: self.problem.lr
+        client_lr = self.task.config.lr if callable(self.task.config.lr) else lambda _: self.task.config.lr
+        client_nlr = self.task.config.nlr if callable(self.task.config.nlr) else lambda _: self.task.config.nlr
 
         for i in range(len(subsets)):
             subset = subsets[i, :]
             
+            client_type = self.task.config.clients[i]
+
             params = cl.ClientParameters(
                 server=self,
                 id=i,
@@ -52,10 +55,10 @@ class Server():
                 loss_hessian=client_loss_hessian,
                 initial_guess=self.consensus,
                 penalty=self.problem.hyper_parameters["penalty"],
-                lr=client_lr
+                lr=(client_lr if client_type == cl.Computation.LOW else client_nlr)
             )
 
-            client = cl.Client(subset, params, self.task.config.clients[i])
+            client = cl.Client(subset, params, )
             self.clients.append(client)
 
         self.clients_primals = np.zeros((len(self.clients), *self.consensus.shape))

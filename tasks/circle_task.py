@@ -19,11 +19,11 @@ class CircleConfig(Config):
 default_config = CircleConfig(clients=[
     *(5*(Computation.HIGH,)),
     *(5*(Computation.LOW,))
-], number=200, optimizer=np.array([10, 10, 5]), lr=1)
+], number=200, optimizer=np.array([10, 10, 5]), lr=0.01, nlr=1)
 
 solo_config = CircleConfig(clients=[
     Computation.HIGH
-], number=200, optimizer=np.array([10, 10, 5]), lr=1)
+], number=200, optimizer=np.array([10, 10, 5]), lr=0.01, nlr=1)
 
 class CircleTask(Task):
     def __init__(self, config: CircleConfig = default_config) -> None:
@@ -108,7 +108,7 @@ class CircleTask(Task):
             
             return hessian
 
-        problem = OptimizationProblem(tol=1e-6, ctol=1e-3, max_iter=20000, lr=1, loss=cost, loss_grad=cost_grad, 
+        problem = OptimizationProblem(tol=1e-6, ctol=1e-3, max_iter=20000, loss=cost, loss_grad=cost_grad, 
                                       loss_hessian=cost_hessian, hyper_parameters=hyper_parameters)
         
         return problem

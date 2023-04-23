@@ -2,13 +2,14 @@ from abc import ABC, abstractmethod
 from client import Computation
 from dataclasses import dataclass
 from functools import cached_property
-from typing import List
+from typing import Callable, List, Union
 
 @dataclass
 class Config():
     clients: List[Computation]
 
-    lr: float
+    lr: Union[float, Callable[[int], float]]
+    nlr: Union[float, Callable[[int], float]] # damped Newton learning rate
 
 class Task(ABC):
 
