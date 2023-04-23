@@ -20,7 +20,7 @@ solo_config = Config(clients=[
 ], lr=0.01, nlr=0.01)
 
 class LogisticRegressionTask(Task):
-    def __init__(self, config: Config = default_config) -> None:
+    def __init__(self, config: Config = solo_config) -> None:
         super().__init__(config)
 
         self.lr = config.lr
@@ -143,3 +143,14 @@ class LogisticRegressionTask(Task):
         plt.title('PCA visualization of logistic regression prediction')
 
         plt.show()
+
+    def get_prediction(self, solution):
+        features = self.dataset[:, 1:]
+        prediction = (1/(1 + np.exp(-features @ solution)) > 0.5).astype(int)
+        return prediction
+    
+    def get_accuracy(self, prediction):
+        y = self.dataset[:, 0]
+        correct_predictions = np.sum(prediction == y)
+        accuracy = correct_predictions / len(y)
+        return accuracy
