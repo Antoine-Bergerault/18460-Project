@@ -100,6 +100,11 @@ class Server():
         duals = self.client_duals
 
         previous = self.consensus
-        self.consensus = np.sum(primals, axis=0) / len(self.clients) - np.sum(duals, axis=0) / (self.problem.hyper_parameters["penalty"] * len(self.clients))
+        self.consensus = np.sum(primals, axis=0) / len(self.clients)
+        
+        penalty = self.problem.hyper_parameters["penalty"]
+
+        if penalty != 0:
+            self.consensus -= np.sum(duals, axis=0) / (penalty * len(self.clients))
 
         self.delta = np.linalg.norm(previous - self.consensus)
