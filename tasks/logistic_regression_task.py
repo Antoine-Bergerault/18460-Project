@@ -11,13 +11,13 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
 
 default_config = Config(clients=[
-    *(1*(Computation.HIGH,)),
-    *(1*(Computation.LOW,))
+    *(2*(Computation.HIGH,)),
+    *(2*(Computation.LOW,))
 ], lr=0.001, nlr=0.004)#lambda k:0.006/sqrt(k)) #0.00148 0.00364575
 
 solo_config = Config(clients=[
     Computation.HIGH
-], lr=0.01, nlr=0.01)
+], lr=0.01, nlr=0.5)
 
 class LogisticRegressionTask(Task):
     def __init__(self, config: Config = default_config) -> None:
@@ -57,7 +57,7 @@ class LogisticRegressionTask(Task):
 
     def get_problem(self):
         hyper_parameters = {
-            "penalty": 10,
+            "penalty": 4,
             "x0": np.random.standard_normal((self.dataset[0, :].shape[0]-1, 1)),
             "regularization_factor": 2
         }
@@ -96,7 +96,7 @@ class LogisticRegressionTask(Task):
 
             return hessian
 
-        problem = OptimizationProblem(tol=1e-6, ctol=1e-6, max_iter=20000, loss=cost, loss_grad=cost_grad, 
+        problem = OptimizationProblem(tol=1e-6, ctol=0.1, max_iter=20000, loss=cost, loss_grad=cost_grad, 
                                       loss_hessian=cost_hessian, hyper_parameters=hyper_parameters)
         
         return problem
@@ -143,3 +143,5 @@ class LogisticRegressionTask(Task):
         plt.title('PCA visualization of logistic regression prediction')
 
         plt.show()
+
+        print(np.sum(prediction == y) / len(y))
