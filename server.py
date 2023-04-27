@@ -80,10 +80,6 @@ class Server():
         for x in threads:
             x.join()
 
-        # update the clients once all have finished computation
-        for client in self.clients:
-            self.update_client(client.params.id, client.primals, client.duals)
-
         # update the consensus once finished computation
         self.update_consensus()
 
