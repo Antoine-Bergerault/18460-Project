@@ -57,9 +57,8 @@ class LogisticRegressionTask(Task):
 
     def get_problem(self):
         hyper_parameters = {
-            "penalty": 4,
-            "x0": np.random.standard_normal((self.dataset[0, :].shape[0]-1, 1)),
-            "regularization_factor": 2
+            "penalty": 10,
+            "x0": np.random.standard_normal((self.dataset[0, :].shape[0]-1, 1))
         }
 
         # simple linear regression cost (mean squared error loss)
@@ -71,7 +70,7 @@ class LogisticRegressionTask(Task):
             # sigmoid of -Aw
             prediction = 1/(1 + np.exp(-features @ x))
             
-            return -categories.T @ np.log(prediction) - (1 - categories).T @ np.log(1 - prediction) + (params["regularization_factor"] / 2) * x.T @ x
+            return -categories.T @ np.log(prediction) - (1 - categories).T @ np.log(1 - prediction)
 
         def cost_grad(x, dataset, params):
             categories = dataset[:, 0, None]
@@ -143,5 +142,3 @@ class LogisticRegressionTask(Task):
         plt.title('PCA visualization of logistic regression prediction')
 
         plt.show()
-
-        print(np.sum(prediction == y) / len(y))
