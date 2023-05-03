@@ -20,15 +20,41 @@ The easiest way to run the project is to open `main.ipynb` using jupyter in the 
 jupyter notebook
 ```
 
-## TODOs
+## Minimal usage
 
-- Make sure the server and clients are working as expected (i.e., our results should be similar to what they got in the paper for the same configuration)
+```python
+import numpy as np
+from server import Server
+from tasks import lrt
 
-- Summarize statistics and compare with results in the paper
+task = lrt.LinearRegressionTask() # will use default configuration
+task.visualize()
 
-- Determine what we want to say and present during the presentation
-    - Proposition: do a live demonstration of a simple thing, and then show results for 3-4 experiments (but might not be possible if we use the professor's computer)
-    - Proposition: summarize briefly the mathematics and the tricks we used (e.g., regularization, not inverting matrices...)
+server = Server(task)
+server.connect_clients()
+
+problem = task.get_problem()
+
+k = 0
+last_cost = float('infinity')
+while k < problem.max_iter and server.delta > problem.tol:
+    current_cost = problem.loss(server.consensus.flatten(), 
+                                task.dataset, problem.hyper_parameters)
+    server.run_iteration(k+1)
+    
+    if np.linalg.norm(current_cost - last_cost) < problem.ctol:
+        last_cost = current_cost
+        break
+        
+    last_cost = current_cost
+    k = k + 1
+
+if k >= problem.max_iter and server.delta > problem.tol:
+    raise Exception("Did not converge")
+    
+solution = server.consensus.flatten()
+task.visualize_solution(solution)
+```
 
 ## References
 
